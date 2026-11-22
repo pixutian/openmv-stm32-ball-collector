@@ -81,7 +81,7 @@ An open-source dual-mode ping-pong ball collector: Bluetooth remote control for 
 4. 保存到 OpenMV 为 `main.py`，运行后确认能框出球、串口有帧输出。
 5. 接线：OpenMV P4（TX）→ C30D PC11（RX），P5（RX）→ C30D PC10（TX），GND 共地，C30D 5V → OpenMV VIN。
 
-![OpenMV 识别画面](media/tech/openmv-detect.png)
+![OpenMV 识别画面](media/tech/openmv-detect.jpg)
 
 参数与调试细节见 [`docs/calibration.md`](docs/calibration.md)、[`docs/control.md`](docs/control.md)、[`docs/protocol.md`](docs/protocol.md)。
 
