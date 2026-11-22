@@ -1,0 +1,38 @@
+# Keil / MDK build artifacts
+firmware/Objects/
+firmware/Listings/
+firmware/RTE/
+firmware/DebugConfig/
+firmware/*.uvguix.*
+firmware/*.uvoptx
+firmware/**/*.bak
+firmware/**/*.bak_*
+firmware/**/*.dep
+firmware/**/*.crf
+firmware/**/*.o
+firmware/**/*.d
+firmware/**/*.axf
+firmware/**/*.map
+firmware/**/*.lst
+
+# Python / OpenMV
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 机械 CAD 备份/临时文件
+hardware/**/*.bak
+hardware/**/*.bak_*
+hardware/**/~$*
+hardware/**/*.tmp
+
+# 通用
+*.log
+.venv/
+venv/
