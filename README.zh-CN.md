@@ -6,7 +6,7 @@
 
 **License:** MIT · **MCU:** STM32F407VET6 · **Vision:** OpenMV H7 · **CAD:** SolidWorks · **Status:** 可复现样机
 
-An open-source dual-mode ping-pong ball collector: Bluetooth remote control for daily use, and an OpenMV-based visual servo mode that finds, centers on, approaches and collects balls automatically. The repository includes firmware, vision scripts, Android APK, protocol tools, mechanical CAD/STL files and technical documentation.
+一个开源的双模式乒乓球收集车：日常用蓝牙遥控，切到视觉模式后由 OpenMV 做视觉伺服，自动找球、对中、接近并收球。仓库包含固件、视觉脚本、Android APK、协议调试工具、机械 CAD/STL 模型和技术文档。
 
 ![整车侧视](hardware/mechanical/previews/assembly-side2.jpg)
 
