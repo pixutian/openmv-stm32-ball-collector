@@ -1,311 +1,312 @@
-# 双模式乒乓球收集车 · PingPong Collector
+# Dual-Mode Ping-Pong Ball Collector
 
-> 一辆能蓝牙遥控、也能视觉自动找球收球的开源乒乓球收集车。
+**English** | [简体中文](README.zh-CN.md)
 
-**License:** MIT · **MCU:** STM32F407VET6 · **Vision:** OpenMV H7 · **CAD:** SolidWorks · **Status:** 可复现样机
+> An open-source robot that can be driven by Bluetooth or collect ping-pong balls autonomously with OpenMV vision.
 
-An open-source dual-mode ping-pong ball collector: Bluetooth remote control for daily use, and an OpenMV-based visual servo mode that finds, centers on, approaches and collects balls automatically. The repository includes firmware, vision scripts, Android APK, protocol tools, mechanical CAD/STL files and technical documentation.
+**License:** MIT · **MCU:** STM32F407VET6 · **Vision:** OpenMV H7 · **CAD:** SolidWorks · **Status:** reproducible prototype
 
-![整车侧视](hardware/mechanical/previews/assembly-side2.jpg)
+An open-source dual-mode ping-pong ball collector: Bluetooth remote control for daily use, and an OpenMV-based visual servo mode that finds, centers on, approaches and collects balls automatically. The repository includes firmware, vision scripts, an Android APK, protocol tools, mechanical CAD/STL files and technical documentation.
 
-## 项目简介
+![Full car, side view](hardware/mechanical/previews/assembly-side2.jpg)
 
-乒乓球训练结束后，散落在场地上的球通常还要靠人弯腰一个个捡。本项目做了一台双模式收集车：轮式底盘负责走位，前端三叶片机构把球拨进后置储球箱；日常用手机蓝牙遥控，切到视觉伺服自动拾取模式后，OpenMV 会自己找球、对中、接近并收球。两种模式既能按 C30D 板上的 USER 按键切换，也能点自研蓝牙 App 里的模式切换按钮切换。
+## Overview
 
-整车以 **C30D（STM32F407VET6）** 为主控，配四轮差速底盘和独立叶片驱动，结构用 **SolidWorks** 设计，打印件以尼龙/树脂为主。按明细计价，整机物料与加工合计 **1398.97 元**（价格随采购时间变化，明细见 [成本核算](#成本核算)）。
+After a ping-pong training session, balls are scattered across the floor and usually have to be picked up by hand. This project builds a dual-mode collector: a wheeled chassis handles navigation, while a three-blade mechanism at the front sweeps balls into a rear storage bin. The car can be driven remotely from a phone over Bluetooth, or switched to visual servo mode where OpenMV finds a ball, centers it, approaches it and collects it.
 
-- 目标不是做一台只能演示的原型，而是把机械、电气、固件和手机端都做成能复现、能继续改的版本。
-- 视觉模式没有独立避障，只在平整、封闭场地测试；参数需要按现场光照和地面重新标定。
+The controller is a **C30D (STM32F407VET6)** board, paired with a four-wheel differential chassis and an independent blade motor. The mechanical structure is designed in **SolidWorks**, and most printed parts are nylon/resin. The bill of materials and machining cost is **CNY 1,398.97** at the time of build (prices vary; see [Cost](#cost)).
 
-## 主要特性
+- The goal is not a demo-only prototype: mechanical, electrical, firmware and mobile parts are all meant to be reproducible and easy to modify.
+- Visual mode has no independent obstacle avoidance. Test only on flat, enclosed surfaces, and recalibrate parameters for each venue and lighting condition.
 
-- **双模式**：蓝牙遥控 / 视觉伺服自动拾取，上电默认遥控模式；USER 按键或 App 按钮切换。
-- **四驱差速底盘**：4 台编码减速电机，200 Hz 控制节拍，四路独立 PI 速度环，7 档速度。
-- **主动收集机构**：三叶片旋转拨送 + 后置储球箱，独立 5 V 叶片电机经 TB6612 驱动，7 档占空比。
-- **视觉识别**：OpenMV H7 采用“霍夫圆检测 + 颜色校验”，HSV 与 LAB 两套等价实现，20–25 Hz 定长帧上报，单帧最多 4 个目标。
-- **人机交互**：128×64 OLED 显示转速、档位、叶片占空比、电池电压；九轴 IMU 姿态解算。
-- **Android 控制台**：八方向摇杆、底盘/叶片七档调节、模式切换、停止、状态回显与运行日志。
-- **完整机械资料**：SolidWorks 零件模型、STL 打印件、装配工程图，以及整车/零件预览图。
+## Features
 
-## 系统架构
+- **Dual mode**: Bluetooth remote control / visual servo auto-collection. Remote mode is the power-on default; switch with the C30D USER button or the Android app.
+- **Four-wheel differential chassis**: four encoder motors, 200 Hz control loop, four independent PI speed loops, 7 speed levels.
+- **Active collection mechanism**: three-blade rotor plus a rear ball bin; a separate 5 V blade motor is driven by a TB6612 with 7 duty levels.
+- **Vision**: OpenMV H7 uses Hough-circle detection plus color validation, with equivalent HSV and LAB implementations. It streams fixed-length frames at 20–25 Hz and reports up to four targets per frame.
+- **Human-machine interface**: 128×64 OLED shows target/actual speed, gear, blade duty and battery voltage; a 9-axis IMU provides attitude data.
+- **Android console**: eight-way joystick, 7-level chassis/blade controls, mode switch, stop button, telemetry and event log.
+- **Complete mechanical package**: SolidWorks parts, STL print files, assembly drawings and multi-view assembly photos.
 
-方案按“机械—电气—嵌入式—上位机”四层组织，对应 CORE 四个模块：
+## System Architecture
 
-![技术架构](media/tech/architecture.png)
+The design is organized as four layers — mechanical, electrical, embedded and host software — corresponding to the CORE modules:
 
-| 层级 | 模块 | 关键内容 |
+![System architecture](media/tech/architecture.png)
+
+| Layer | Module | Key content |
 |---|---|---|
-| C 机械 | 外壳与收集机构 | 尼龙/树脂打印件、加强筋、三叶片、导流爪、储球箱 |
-| O 电气 | 硬件选型与接线 | C30D 主控、四驱底盘、TB6612 + 5 V 叶片电机、OpenMV H7、HC-02 蓝牙、OLED |
-| R 嵌入式 | C30D 固件 | 差速驱动、编码器闭环、蓝牙协议、视觉伺服、模式切换、OLED |
-| E 上位机 | Android App | 蓝牙 SPP、摇杆/档位、模式切换、状态回显 |
+| C — Mechanical | Enclosure and collection mechanism | Nylon/resin printed parts, ribs, three-blade rotor, guide claws, ball bin |
+| O — Electrical | Hardware selection and wiring | C30D controller, four-wheel chassis, TB6612 + 5 V blade motor, OpenMV H7, HC-02 Bluetooth, OLED |
+| R — Embedded | C30D firmware | Differential drive, encoder closed loop, Bluetooth protocol, visual servo, mode switching, OLED |
+| E — Host | Android app | Bluetooth SPP, joystick/gears, mode switch, telemetry |
 
-四层之间通过明确的接口衔接：机械层给出安装孔位和运动包络，电气层提供电源与信号通道，嵌入式层输出 PWM/方向信号，上位机通过蓝牙协议下发指令。这样一层改动能尽量少牵连其他层。
+The layers meet at explicit interfaces: the mechanical layer defines mounting holes and motion envelopes, the electrical layer provides power and signal paths, the embedded layer outputs PWM/direction signals, and the host layer sends commands over Bluetooth. This keeps changes in one layer from rippling through the others.
 
-## 硬件清单
+## Hardware
 
-| 类别 | 设备/方案 | 关键参数 |
+| Category | Device / solution | Key parameters |
 |---|---|---|
-| 主控 | 轮趣科技 C30D（采购件） | STM32F407VET6，驱控一体，集成 4 路底盘驱动 |
-| 底盘 | 轮趣 R1 四轮差速套件 | 4 × MG310P20 编码减速电机，7.4 V |
-| 视觉 | OpenMV4 H7 | UART3 ↔ C30D UART4，115200 8N1 |
-| 收集 | 5 V 直流叶片电机 + TB6612FNG | 独立供电/驱动，7 档 PWM |
-| 通信 | HC-02 蓝牙透传 | USART2，9600 bps，经典蓝牙 SPP |
-| 显示 | 0.96" OLED（SSD1306） | 128×64，I²C |
-| 电源 | 12 V 锂电池 + DCDC 降压 | 电池标称 12 V / 2550 mAh |
-| 交互 | C30D USER 按键、蜂鸣器 | 模式切换提示 |
+| Controller | WHEELTEC C30D (purchased) | STM32F407VET6, integrated 4-channel chassis driver |
+| Chassis | WHEELTEC R1 four-wheel differential kit | 4 × MG310P20 encoder motors, 7.4 V |
+| Vision | OpenMV4 H7 | UART3 ↔ C30D UART4, 115200 8N1 |
+| Collection | 5 V DC blade motor + TB6612FNG | Independent supply/driver, 7-level PWM |
+| Communication | HC-02 Bluetooth bridge | USART2, 9600 bps, classic Bluetooth SPP |
+| Display | 0.96" OLED (SSD1306) | 128×64, I²C |
+| Power | 12 V Li-ion battery + DCDC buck | Nominal 12 V / 2550 mAh |
+| Interaction | C30D USER button, buzzer | Mode-switch feedback |
 
-> C30D 与轮趣 R1 底盘为采购件，其 BSP/资料遵循厂家许可，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+> The C30D and WHEELTEC R1 chassis are purchased parts. Their BSP and vendor documentation remain under the vendor's terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-![模块级接线](media/tech/wiring-module.png)
+![Module wiring](media/tech/wiring-module.png)
 
-上图为 C30D、OpenMV、TB6612 与 DCDC 的模块级接线；OpenMV 四线连接、电平和上电顺序见 [`docs/wiring.md`](docs/wiring.md)。
+The diagram above shows module-level wiring for the C30D, OpenMV, TB6612 and DCDC converter. For the four-wire OpenMV connection, voltage levels and power-up order, see [`docs/en/wiring.md`](docs/en/wiring.md).
 
-## 快速开始
+## Quick Start
 
-### 1. 编译与烧录固件
+### 1. Build and flash the firmware
 
-1. 安装 Keil uVision 5（MDK-ARM）和 STM32F4 器件支持包。
-2. 打开 [`firmware/Fusion_OpenCar.uvprojx`](firmware/Fusion_OpenCar.uvprojx)。
-3. 编译，确认 0 error。
-4. 用 ST-Link 或 FlyMcu 烧录。
-5. **烧录 C30D 前先断电，并断开 OpenMV 与 C30D 的 UART 连接线**；烧录完成后再恢复连接，核对线序后上电。
+1. Install Keil uVision 5 (MDK-ARM) and the STM32F4 device support package.
+2. Open [`firmware/Fusion_OpenCar.uvprojx`](firmware/Fusion_OpenCar.uvprojx).
+3. Build and confirm 0 errors.
+4. Flash with ST-Link or FlyMcu.
+5. **Power off the C30D and disconnect the OpenMV UART cable before flashing.** Reconnect after flashing, verify the wire order, then power up.
 
-预编译 [`releases/Fusion_OpenCar.hex`](releases/Fusion_OpenCar.hex) 仅供参考，以源码重新编译为准。
+The prebuilt [`releases/Fusion_OpenCar.hex`](releases/Fusion_OpenCar.hex) is for quick verification only; rebuilding from source is the reference.
 
-### 2. 运行 OpenMV 视觉
+### 2. Run the OpenMV vision script
 
-1. 打开 OpenMV IDE，连接 OpenMV H7。
-2. 打开 [`openmv/main_circle_pos.py`](openmv/main_circle_pos.py)（HSV 版）或 [`openmv/main_lab.py`](openmv/main_lab.py)（LAB 版）。
-3. 按现场光照标定颜色阈值、`CIRCLE_THRESHOLD`、`R_MIN/R_MAX` 等参数。
-4. 保存到 OpenMV 为 `main.py`，运行后确认能框出球、串口有帧输出。
-5. 接线：OpenMV P4（TX）→ C30D PC11（RX），P5（RX）→ C30D PC10（TX），GND 共地，C30D 5V → OpenMV VIN。
+1. Open OpenMV IDE and connect the OpenMV H7.
+2. Open [`openmv/main_circle_pos.py`](openmv/main_circle_pos.py) (HSV) or [`openmv/main_lab.py`](openmv/main_lab.py) (LAB).
+3. Calibrate color thresholds, `CIRCLE_THRESHOLD`, `R_MIN/R_MAX` and related parameters for the venue lighting.
+4. Save the script to OpenMV as `main.py`, run it, and confirm that balls are boxed and frames are sent over UART.
+5. Wiring: OpenMV P4 (TX) → C30D PC11 (RX), P5 (RX) → C30D PC10 (TX), common GND, C30D 5V → OpenMV VIN.
 
-![OpenMV 识别画面](media/tech/openmv-detect.jpg)
+![OpenMV recognition](media/tech/openmv-detect.jpg)
 
-参数与调试细节见 [`docs/calibration.md`](docs/calibration.md)、[`docs/control.md`](docs/control.md)、[`docs/protocol.md`](docs/protocol.md)。
+For calibration and debugging details, see [`docs/en/calibration.md`](docs/en/calibration.md), [`docs/en/control.md`](docs/en/control.md) and [`docs/en/protocol.md`](docs/en/protocol.md).
 
-### 3. 安装 Android 控制台
+### 3. Install the Android console
 
-1. 手机安装 [`app/收集车控制台V3.3.apk`](<app/收集车控制台V3.3.apk>)，打开蓝牙。
-2. 在系统设置里配对 HC-02。
-3. 打开“收集车控制台”，选择设备并连接。
-4. 用八方向摇杆/档位条遥控；点模式切换按钮进入视觉伺服自动拾取。
+1. Install [`app/收集车控制台V3.3.apk`](<app/收集车控制台V3.3.apk>) and enable Bluetooth.
+2. Pair the HC-02 module in system settings.
+3. Open “收集车控制台”, select the device and connect.
+4. Use the eight-way joystick/gear bar for driving; tap the mode button for visual servo auto-collection.
 
 <p>
-<img src="media/tech/app-remote.jpeg" width="30%" alt="控制台遥控界面">
-<img src="media/tech/app-control.jpeg" width="30%" alt="控制台档位与日志">
+<img src="media/tech/app-remote.jpeg" width="30%" alt="Android console — driving">
+<img src="media/tech/app-control.jpeg" width="30%" alt="Android console — gears and log">
 </p>
 
-App 以 APK 形式提供；包名 `com.pxt.carcontrol`，versionName `3.3`，versionCode `6`。
+The app is distributed as an APK. Package name `com.pxt.carcontrol`, versionName `3.3`, versionCode `6`.
 
-### 4. 上电与调试顺序
+### 4. Power-up and test order
 
-1. 先架空车轮，确认方向、档位、急停和 OLED 显示正常。
-2. 叶片调试先断开叶片电源，确认转向和占空比后再接负载。
-3. 最后再接 OpenMV，确认串口帧和视觉模式切换正常。
-4. 视觉模式只在平整、封闭场地测试；操作者保持随时可按停止按钮。
+1. Raise the wheels off the ground and verify direction, gears, stop button and OLED display.
+2. For blade testing, disconnect blade power first; verify direction and duty before applying load.
+3. Connect OpenMV last; verify UART frames and mode switching.
+4. Test visual mode only on flat, enclosed surfaces. Keep the stop button within reach.
 
-## 仓库结构
+## Repository Layout
 
 ```text
 .
-├── firmware/              C30D 固件（Keil / C / STM32F4 标准外设库）
-├── openmv/                OpenMV H7 端 MicroPython 脚本
-├── hardware/mechanical/   机械 CAD、STL 打印件、工程图与装配参考图
-├── app/                   Android 控制台 V3.3（APK）
-├── tools/                 PC 端协议模拟与调试脚本
-├── docs/                  协议、控制、接线、标定、发布说明
-├── media/                 接线图、CAD 截图、实拍照片
-├── releases/              预编译固件（hex，仅供参考）
+├── firmware/              C30D firmware (Keil / C / STM32F4 StdPeriph)
+├── openmv/                OpenMV H7 MicroPython scripts
+├── hardware/mechanical/   Mechanical CAD, STL, drawings and assembly photos
+├── app/                   Android console V3.3 (APK)
+├── tools/                 PC-side protocol simulator and debugging tools
+├── docs/                  Protocol, control, wiring, calibration, publishing
+├── media/                 Wiring diagrams, CAD screenshots, field photos
+├── releases/              Prebuilt firmware (hex, for reference only)
 ├── LICENSE                MIT
-└── THIRD_PARTY_NOTICES.md 第三方组件与许可说明
+└── THIRD_PARTY_NOTICES.md Third-party components and licenses
 ```
 
-## 文档索引
+## Documentation
 
-| 文档 | 内容 |
+| Document | Content |
 |---|---|
-| [`docs/wiring.md`](docs/wiring.md) | C30D ↔ OpenMV 四线连接、电平与上电顺序 |
-| [`docs/protocol.md`](docs/protocol.md) | 视觉链路帧格式、TYPE 定义、CRC 与示例 |
-| [`docs/control.md`](docs/control.md) | 双模式切换、视觉伺服控制量、蓝牙指令 |
-| [`docs/calibration.md`](docs/calibration.md) | 相机安装、像素/距离标定、阈值调试 |
-| [`docs/publishing.md`](docs/publishing.md) | GitHub / Gitee / AtomGit 发布与仓库设置 |
-| [`hardware/mechanical/README.md`](hardware/mechanical/README.md) | 3D 零件清单、材料、紧固件与装配要点 |
-| [`hardware/mechanical/previews/README.md`](hardware/mechanical/previews/README.md) | 整车多视角装配图与 10 个主要零件预览 |
+| [`docs/en/wiring.md`](docs/en/wiring.md) | C30D ↔ OpenMV four-wire connection, levels and power-up order |
+| [`docs/en/protocol.md`](docs/en/protocol.md) | Vision frame format, TYPE definitions, CRC and examples |
+| [`docs/en/control.md`](docs/en/control.md) | Mode switching, visual servo control, Bluetooth commands |
+| [`docs/en/calibration.md`](docs/en/calibration.md) | Camera mounting, pixel/distance calibration, threshold tuning |
+| [`docs/en/publishing.md`](docs/en/publishing.md) | Publishing to GitHub / Gitee / AtomGit |
+| [`hardware/mechanical/README.md`](hardware/mechanical/README.md) | Part list, materials, fasteners and assembly notes |
+| [`hardware/mechanical/previews/README.md`](hardware/mechanical/previews/README.md) | Multi-view assembly references and part previews |
 
-## 机械结构与 3D 模型
+## Mechanical Design and 3D Models
 
-机械资料集中在 [`hardware/mechanical/`](hardware/mechanical/)，按零件、打印件、工程图和预览图分类整理：
+Mechanical files live in [`hardware/mechanical/`](hardware/mechanical/), organized by part models, print files, drawings and previews:
 
 ```text
 hardware/mechanical/
 ├── solidworks/
-│   ├── parts/          *.SLDPRT 零件模型
-│   └── drawings/       装配工程图 DWG
-├── stl/                *.STL 打印件（可直接切片）
-├── previews/           整车多视角参考图 + 主要零件预览
-└── README.md           零件清单、材料、紧固件与打印说明
+│   ├── parts/          13 × *.SLDPRT part models
+│   └── drawings/       Assembly drawing (DWG)
+├── stl/                11 × *.STL print files
+├── previews/           Multi-view assembly photos + 10 part previews
+└── README.md           Part list, materials, fasteners and printing notes (English / 中文)
 ```
 
-**收球路径**：左右弧形爪把散球往入口引 → 三叶片旋转把球沿导流区推进 → 后置储球箱储存。旋转轴一端由电机驱动，另一端用轴承做自由端支承，盒盖负责轴承定位；单支架/双支架抬高后箱，前挡顶和拱顶负责横向连接与设备安装。
+**Collection path**: left/right curved claws guide scattered balls toward the inlet → the three-blade rotor pushes them through the channel → the rear bin stores them. One end of the rotor shaft is driven by the motor; the other end is supported by a bearing, located by the bearing cover. Single/double brackets raise the rear bin, while the front top baffle and reinforced arch top provide cross-bracing and mounting points for the DCDC converter.
 
-### 装配参考图
+### Assembly References
 
-| 整车前部 / 收集机构 | 整车侧视 |
+| Front collection mechanism | Full car, side view |
 |---|---|
-| ![整车前部](hardware/mechanical/previews/assembly-front.jpg) | ![整车侧视](hardware/mechanical/previews/assembly-side2.jpg) |
+| ![Front](hardware/mechanical/previews/assembly-front.jpg) | ![Side](hardware/mechanical/previews/assembly-side2.jpg) |
 
-更多零件预览和对应模型见 [`hardware/mechanical/previews/README.md`](hardware/mechanical/previews/README.md)。下面两张是 CAD 装配与爆炸截图，用于理解整机构成。
+More views and part previews are in [`hardware/mechanical/previews/README.md`](hardware/mechanical/previews/README.md). The two CAD images below show the assembly and exploded layout.
 
-![整车 CAD 装配](media/tech/cad-assembly.png)
+![CAD assembly](media/tech/cad-assembly.png)
 
-![爆炸图截图](media/tech/cad-exploded.png)
+![Exploded view](media/tech/cad-exploded.png)
 
-### 主要零件
+### Main Parts
 
-| # | 零件 | 预览 | SLDPRT | STL | 材料/工艺 | 数量 | 用途 |
+| # | Part | Preview | SLDPRT | STL | Material / process | Qty | Purpose |
 |---|---|---|---|---|---|---|---|
-| 1 | 后备箱 | [图](hardware/mechanical/previews/01-storage-box.png) | [模型](<hardware/mechanical/solidworks/parts/后备箱.SLDPRT>) | [STL](<hardware/mechanical/stl/后备箱.STL>) | 9600 树脂 | 1 | 储存收集到的乒乓球 |
-| 2 | 盒盖 | [图](hardware/mechanical/previews/02-bearing-cover.png) | [模型](<hardware/mechanical/solidworks/parts/盒盖.SLDPRT>) | [STL](<hardware/mechanical/stl/盒盖.STL>) | PA12 | 1 | 固定自由端轴承 |
-| 3 | 叶片（三叶式） | [图](hardware/mechanical/previews/03-blade.png) | [模型](<hardware/mechanical/solidworks/parts/叶片.SLDPRT>) | [STL](<hardware/mechanical/stl/叶片.STL>) | PA12 | 1 组 | 旋转拨送球体 |
-| 4 | 叶片轴（滚轴交接） | [图](hardware/mechanical/previews/04-blade-shaft.png) | [模型](<hardware/mechanical/solidworks/parts/叶片轴（滚轴交接）.SLDPRT>) | [STL](<hardware/mechanical/stl/叶片轴（滚轴交接）.STL>) | BJ-316L 不锈钢 | 1 | 旋转轴与相邻件轴向衔接 |
-| 5 | 左爪 | [图](hardware/mechanical/previews/05-guide-claws.png) | [模型](<hardware/mechanical/solidworks/parts/左爪.SLDPRT>) | [STL](<hardware/mechanical/stl/左爪.STL>) | 3201PA-F | 1 | 左侧弧形导流 |
-| 6 | 右爪 | [图](hardware/mechanical/previews/05-guide-claws.png) | [模型](<hardware/mechanical/solidworks/parts/右爪.SLDPRT>) | [STL](<hardware/mechanical/stl/右爪.STL>) | 3201PA-F | 1 | 右侧弧形导流 |
-| 7 | 前挡顶 | [图](hardware/mechanical/previews/06-front-top-baffle.png) | [模型](<hardware/mechanical/solidworks/parts/前挡顶.SLDPRT>) | [STL](<hardware/mechanical/stl/前挡顶.STL>) | 3D 打印（材料待补） | 1 | 前端横向连接/定位 |
-| 8 | 单支架 | [图](hardware/mechanical/previews/07-single-bracket.png) | [模型](<hardware/mechanical/solidworks/parts/单支架.SLDPRT>) | [STL](<hardware/mechanical/stl/单支架.STL>) | PA12 | 2 | 抬高后箱、调整高度 |
-| 9 | 双支架 | [图](hardware/mechanical/previews/08-double-bracket.png) | [模型](<hardware/mechanical/solidworks/parts/双支架.SLDPRT>) | [STL](<hardware/mechanical/stl/双支架.STL>) | PA12 | 1 组 | 双侧连接支撑 |
-| 10 | 拱顶（强化） | [图](hardware/mechanical/previews/09-arch-top.png) | [模型](<hardware/mechanical/solidworks/parts/拱顶（强化）.SLDPRT>) | [STL](<hardware/mechanical/stl/拱顶%28强化）.STL>) | 9600 树脂 | 2 | 横梁、安装高度可调支架与 DCDC |
-| 11 | 车前端 | [图](hardware/mechanical/previews/assembly-front.jpg) | [模型](<hardware/mechanical/solidworks/parts/车前端.SLDPRT>) | [STL](<hardware/mechanical/stl/车前端.STL>) | 3201PA-F | 1 | 前端收集机构主体 |
-| 12 | 轴承 605.ZZ | [图](hardware/mechanical/previews/10-bearing-605zz.png) | — | — | 采购件（内 5 × 外 11 × 高 5） | 1 | 自由端低摩擦支承 |
+| 1 | Storage bin | [preview](hardware/mechanical/previews/01-storage-box.png) | [model](<hardware/mechanical/solidworks/parts/后备箱.SLDPRT>) | [STL](<hardware/mechanical/stl/后备箱.STL>) | 9600 resin | 1 | Stores collected balls |
+| 2 | Bearing cover | [preview](hardware/mechanical/previews/02-bearing-cover.png) | [model](<hardware/mechanical/solidworks/parts/盒盖.SLDPRT>) | [STL](<hardware/mechanical/stl/盒盖.STL>) | PA12 | 1 | Locates the free-end bearing |
+| 3 | Three-blade rotor | [preview](hardware/mechanical/previews/03-blade.png) | [model](<hardware/mechanical/solidworks/parts/叶片.SLDPRT>) | [STL](<hardware/mechanical/stl/叶片.STL>) | PA12 | 1 set | Rotates and pushes balls |
+| 4 | Blade shaft (roller coupling) | [preview](hardware/mechanical/previews/04-blade-shaft.png) | [model](<hardware/mechanical/solidworks/parts/叶片轴（滚轴交接）.SLDPRT>) | [STL](<hardware/mechanical/stl/叶片轴（滚轴交接）.STL>) | BJ-316L stainless steel | 1 | Axial coupling of rotor and roller |
+| 5 | Left guide claw | [preview](hardware/mechanical/previews/05-guide-claws.png) | [model](<hardware/mechanical/solidworks/parts/左爪.SLDPRT>) | [STL](<hardware/mechanical/stl/左爪.STL>) | 3201PA-F | 1 | Left curved guide |
+| 6 | Right guide claw | [preview](hardware/mechanical/previews/05-guide-claws.png) | [model](<hardware/mechanical/solidworks/parts/右爪.SLDPRT>) | [STL](<hardware/mechanical/stl/右爪.STL>) | 3201PA-F | 1 | Right curved guide |
+| 7 | Front top baffle | [preview](hardware/mechanical/previews/06-front-top-baffle.png) | [model](<hardware/mechanical/solidworks/parts/前挡顶.SLDPRT>) | [STL](<hardware/mechanical/stl/前挡顶.STL>) | 3D printed (material TBD) | 1 | Front cross member / alignment |
+| 8 | Single bracket | [preview](hardware/mechanical/previews/07-single-bracket.png) | [model](<hardware/mechanical/solidworks/parts/单支架.SLDPRT>) | [STL](<hardware/mechanical/stl/单支架.STL>) | PA12 | 2 | Raises and adjusts the rear bin |
+| 9 | Double bracket | [preview](hardware/mechanical/previews/08-double-bracket.png) | [model](<hardware/mechanical/solidworks/parts/双支架.SLDPRT>) | [STL](<hardware/mechanical/stl/双支架.STL>) | PA12 | 1 set | Dual-side support |
+| 10 | Reinforced arch top | [preview](hardware/mechanical/previews/09-arch-top.png) | [model](<hardware/mechanical/solidworks/parts/拱顶（强化）.SLDPRT>) | [STL](<hardware/mechanical/stl/拱顶(强化）.STL>) | 9600 resin | 2 | Cross beam / DCDC mounting |
+| 11 | Front collector body | [preview](hardware/mechanical/previews/assembly-front.jpg) | [model](<hardware/mechanical/solidworks/parts/车前端.SLDPRT>) | [STL](<hardware/mechanical/stl/车前端.STL>) | 3201PA-F | 1 | Main front collection body |
+| 12 | 605.ZZ bearing | [preview](hardware/mechanical/previews/10-bearing-605zz.png) | — | — | Purchased (5 × 11 × 5 mm) | 1 | Low-friction free-end support |
 
-辅助模型：`电池.SLDPRT`；工程图见 [`hardware/mechanical/solidworks/drawings/`](hardware/mechanical/solidworks/drawings/)，完整清单与打印说明见 [`hardware/mechanical/README.md`](hardware/mechanical/README.md)。
+Auxiliary model: [`电池.SLDPRT`](<hardware/mechanical/solidworks/parts/电池.SLDPRT>); assembly drawing: [`hardware/mechanical/solidworks/drawings/装配工程图.DWG`](<hardware/mechanical/solidworks/drawings/装配工程图.DWG>). See [`hardware/mechanical/README.md`](hardware/mechanical/README.md) for the full list and printing notes.
 
-### 紧固件
+### Fasteners
 
-统一 M3 国标件（装配用量）：M3×8 × 4、M3×9 × 8、M3×10 × 6、M3×25 × 2、M3×30 × 2、M3×12 × 6、M3×7 × 8，合计 36 个螺钉 + 36 个 M3 螺母。采购按整包另算。
+M3 hardware, assembly quantities: M3×8 × 4, M3×9 × 8, M3×10 × 6, M3×25 × 2, M3×30 × 2, M3×12 × 6, M3×7 × 8 — 36 screws and 36 M3 nuts in total. Buy in full packs.
 
-### 打印与装配注意
+### Printing and Assembly Notes
 
-- STL 单位按毫米导出；打印前在切片软件里核对尺寸与摆放方向。
-- 打印件容易变形，装配重点检查：旋转轴同轴度、支架孔位、叶片运动间隙、前端导流路径与后箱入口的衔接。
-- 已装机的自由端轴承、轴承定位盒盖和滚轴交接件要复核同轴度与旋转阻力。
-- 左右导流夹可各加一根弯折铁丝做限位隔挡，减少卡球（见技术文档 9.1 节）。
+- STL files are exported in millimetres; check the bounding box and orientation in the slicer before printing.
+- Printed parts can warp. During assembly, check rotor shaft alignment, bracket hole positions, blade clearance, and the transition from the front channel to the rear bin inlet.
+- Recheck the free-end bearing, bearing cover and roller coupling for concentricity and rotation resistance.
+- A bent wire can be added to each guide claw as a stop to reduce ball jams (see section 9.1 of the technical report).
 
-## 视觉伺服自动拾取
+## Visual Servo Auto-Collection
 
-### 识别流程
+### Recognition Pipeline
 
-OpenMV 先在灰度图上用霍夫圆找候选球，再用圆内亮度和 Canny 边缘密度过滤假圆，最后在圆内采样 RGB 判断颜色。仓库保留两套等价颜色实现：`main_circle_pos.py` 用 HSV，`main_lab.py` 用 LAB；两版帧格式和控制逻辑完全一致。
+OpenMV first finds candidate balls with a Hough circle transform on the grayscale image, filters false circles using mean brightness and Canny edge density inside the circle, then samples RGB values to validate the color. Two equivalent color implementations are provided: `main_circle_pos.py` uses HSV, `main_lab.py` uses LAB; frame format and control logic are identical.
 
-- 白色球：HSV 下 `S ≤ 0.28, V ≥ 0.60`；LAB 下 `L ≥ 70, |a| ≤ 10, |b| ≤ 15`。
-- 黄色球：HSV 下 `H 35–70°, S ≥ 0.35, V ≥ 0.45`；LAB 下 `L ≥ 50, b ≥ 20, a ∈ [-10, 20]`。
-- 每帧最多上报 4 个目标，按“颜色相似度 × 0.6 + 形状相似度 × 0.4”排序。
+- White ball: HSV `S ≤ 0.28, V ≥ 0.60`; LAB `L ≥ 70, |a| ≤ 10, |b| ≤ 15`.
+- Yellow ball: HSV `H 35–70°, S ≥ 0.35, V ≥ 0.45`; LAB `L ≥ 50, b ≥ 20, a ∈ [-10, 20]`.
+- Up to four targets per frame, ranked by `0.6 × color similarity + 0.4 × shape similarity`.
 
-### 控制策略（C30D 侧）
+### Control Strategy (C30D)
 
-1. **模式切换**：上电默认遥控；USER 按键或 App 发送 `V` 切换，蜂鸣器短鸣。
-2. **中心对中**：画面中心线两侧各 1/5 宽为中心带（QVGA 等效 ±32 px），带外原地慢转，进带才前进。
-3. **速度控制**：默认 200 r/min；看到球按 100 r/min/s 升到 300 r/min；丢球/超时回 200 r/min。
-4. **丢球续行**：目标滚到收集口下方时按最后轮速继续走一小段（`VISION_LOST_HOLD_MS`）。
-5. **无球搜索**：5 s 无有效球后原地分段搜索，每段约 60°，段间停 3 s，共 6 段约 360°。
-6. **多球选择**：`score = 0.45×颜色 + 0.30×形状 + 0.15×面积 + 0.10×居中`，取最高分。
-7. **叶片控制**：视觉模式不接管叶片，占空比始终由遥控档位决定。
+1. **Mode switch**: remote mode is the default; press the USER button or send `V` from the app. The buzzer beeps once.
+2. **Centering**: a center band of ±1/5 frame width (QVGA ±32 px). Outside the band, turn in place; inside, drive forward.
+3. **Speed**: 200 r/min base; when a ball is seen, ramp to 300 r/min at 100 r/min/s; return to 200 r/min on target loss/timeout.
+4. **Lost-target hold**: when the ball rolls below the collection inlet, keep the last wheel speeds briefly (`VISION_LOST_HOLD_MS`).
+5. **Search**: after 5 s without a valid target, rotate in ~60° segments with 3 s pauses, six segments (~360°).
+6. **Target selection**: `score = 0.45×color + 0.30×shape + 0.15×area + 0.10×centering`; highest score wins.
+7. **Blade control**: visual mode does not take over the blade; duty remains controlled by the remote gear.
 
-主要参数（完整列表见 [`docs/calibration.md`](docs/calibration.md)）：
+Key parameters (full list in [`docs/en/calibration.md`](docs/en/calibration.md)):
 
-| 参数 | 默认值 | 说明 |
+| Parameter | Default | Description |
 |---|---|---|
-| `VISION_TURN_RATE` | 0.30 | 转向幅度 |
-| `VISION_BAND_PX` | ±32 | 中心带 |
-| `VISION_SPEED_BASE` / `TRACK` | 200 / 300 r/min | 基础/跟踪速度 |
-| `VISION_SPEED_RAMP` | 100 r/min/s | 加速梯度 |
-| `VISION_TIMEOUT_MS` | 300 ms | 丢球判定 |
-| `VISION_LOST_HOLD_MS` | 200 ms（可设 1000） | 丢球续行 |
-| `VISION_STOP_AREA` | 4000 px | 停车面积阈值 |
-| `VISION_SEARCH_AFTER_MS` | 5000 ms | 进入搜索 |
-| `VISION_SEARCH_60_MS` | 333 ms | 每段约 60° |
-| `VISION_SEARCH_STEPS` | 6 | 搜索段数 |
+| `VISION_TURN_RATE` | 0.30 | Turn gain |
+| `VISION_BAND_PX` | ±32 | Center band |
+| `VISION_SPEED_BASE` / `TRACK` | 200 / 300 r/min | Base / tracking speed |
+| `VISION_SPEED_RAMP` | 100 r/min/s | Acceleration ramp |
+| `VISION_TIMEOUT_MS` | 300 ms | Target-loss timeout |
+| `VISION_LOST_HOLD_MS` | 200 ms (up to 1000) | Lost-target hold |
+| `VISION_STOP_AREA` | 4000 px | Stop / back-off area threshold |
+| `VISION_SEARCH_AFTER_MS` | 5000 ms | Start search after |
+| `VISION_SEARCH_60_MS` | 333 ms | Time per ~60° segment |
+| `VISION_SEARCH_STEPS` | 6 | Number of search segments |
 
-> 颜色阈值与光照强相关，换场地必须用 OpenMV IDE 的直方图/阈值编辑器重新标定；建议每次只改少量参数并做实车对比。
+> Color thresholds depend strongly on lighting. Recalibrate with the OpenMV IDE histogram/threshold editor at each venue; change a few parameters at a time and verify on the car.
 
-![视觉模式实车运行](media/tech/field-vision-1.jpg)
+![Visual mode field test](media/tech/field-vision-1.jpg)
 
-## 通信协议
+## Communication Protocol
 
-视觉链路走二进制定长帧：
+Vision frames use a fixed-length binary format:
 
 ```text
 AA 55 | TYPE | LEN | PAYLOAD ... | CRC8
 ```
 
-- 多字节字段小端；`CRC8` 多项式 `0x07`（反射实现 `0x8C`），初值 0，覆盖 `TYPE/LEN/PAYLOAD`。
-- 单帧最大载荷 16 字节。
+- Multi-byte fields are little-endian; `CRC8` uses polynomial `0x07` (reflected `0x8C`), initial value 0, covering `TYPE/LEN/PAYLOAD`.
+- Maximum payload is 16 bytes.
 
-| TYPE | 名称 | 载荷 | 说明 |
+| TYPE | Name | Payload | Description |
 |---|---|---|---|
-| `0x01` | TARGET | `dx:int16, dy:int16, area:uint16, conf:uint8` | 单目标偏移、面积、置信度 |
-| `0x05` | MULTI | `count:uint8 + [dx,dy,area,conf,round] × count` | 最多 4 个目标 |
-| `0x02` | STATUS | `fps:uint8, mode:uint8` | 调试用（当前未发送） |
-| `0x03` | CMD | `cmd:uint8` | 预留 |
+| `0x01` | TARGET | `dx:int16, dy:int16, area:uint16, conf:uint8` | Single target offset, area, confidence |
+| `0x05` | MULTI | `count:uint8 + [dx,dy,area,conf,round] × count` | Up to four targets |
+| `0x02` | STATUS | `fps:uint8, mode:uint8` | Debug status (not currently sent) |
+| `0x03` | CMD | `cmd:uint8` | Reserved |
 
-完整帧定义、示例与时序见 [`docs/protocol.md`](docs/protocol.md)；PC 端可用 [`tools/protocol_sim.py`](tools/protocol_sim.py) 模拟 OpenMV 发帧。
+For the complete frame definition, example and timing, see [`docs/en/protocol.md`](docs/en/protocol.md). On a PC, [`tools/protocol_sim.py`](tools/protocol_sim.py) can simulate OpenMV frames.
 
-## 蓝牙遥控
+## Bluetooth Remote Control
 
-- App 与 HC-02 使用经典蓝牙 SPP（RFCOMM），UUID `00001101-0000-1000-8000-00805F9B34FB`。
-- 指令先进入单线程队列，按 `CMD_GAP_MS` 节流下发，避免长按连发挤满串口。
-- 方向、档位、叶片、模式切换、停止等指令定义见 [`docs/control.md`](docs/control.md) 与 `firmware/App/app_link.c`。
-- 当前 App 没有断线重连和心跳保活，长时间演示时若蓝牙断开需手动重连。
+- The app and HC-02 use classic Bluetooth SPP (RFCOMM), UUID `00001101-0000-1000-8000-00805F9B34FB`.
+- Commands enter a single-threaded queue and are throttled by `CMD_GAP_MS` to avoid flooding the UART during long presses.
+- Direction, gear, blade, mode-switch and stop commands are defined in [`docs/en/control.md`](docs/en/control.md) and `firmware/App/app_link.c`.
+- The current app has no automatic reconnect or heartbeat; if Bluetooth drops during a long demo, reconnect manually.
 
-## 成本核算
+## Cost
 
-已计价物料与加工合计 **1398.97 元**（不含手头存量杜邦线/导线）：
+Total priced materials and machining: **CNY 1,398.97** (excluding on-hand Dupont wires):
 
-| 项目 | 金额/元 | 占比（约） |
+| Item | Cost / CNY | Share |
 |---|---:|---:|
-| C30D 主控板 | 359.00 | 25.7% |
-| 轮趣 R1 底盘 | 339.60 | 24.3% |
-| 3D 打印件（车前端、后备箱、叶片、爪、支架等） | 416.44 | 29.8% |
+| C30D controller | 359.00 | 25.7% |
+| WHEELTEC R1 chassis | 339.60 | 24.3% |
+| 3D-printed parts (front body, bin, blades, claws, brackets, etc.) | 416.44 | 29.8% |
 | OpenMV4 H7 | 157.00 | 11.2% |
-| 紧固件 | 44.60 | 3.2% |
-| 电气/辅材/线材/轴承等 | 82.33 | 5.9% |
-| **合计** | **1398.97** | **100%** |
+| Fasteners | 44.60 | 3.2% |
+| Electrical, wiring, bearings and consumables | 82.33 | 5.9% |
+| **Total** | **1,398.97** | **100%** |
 
-降本方向：采购件优先选同系列低配主控或二手底盘；自研件按零件尺寸合并排版、大件中空/减薄、非受力件改用 PA-F 或 PLA；紧固件/扎带/铁丝按整包采购。
+Cost reduction: choose a lower-cost controller or used chassis where appropriate; nest printed parts, hollow large parts and reduce wall thickness; use PA-F or PLA for non-structural parts; buy fasteners, zip ties and wire in bulk.
 
-## 已知问题
+## Known Issues
 
-1. 视觉模式没有超声波/雷达，**无独立避障**，只在平整、封闭场地测试。
-2. 60° 分段搜索靠时间估算，没有陀螺仪角度闭环，地面摩擦变化会影响角度。
-3. 颜色阈值依赖现场光照，换场地需重新标定。
-4. RGB565 采集 + 圆检测帧率有限，远距离小球识别率会下降。
-5. App 无断线重连/心跳；档位与步进参数目前写死在代码里。
-6. 打印件装配误差会带来模型里没体现的碰撞，需用实物装配和连续收球测试继续验证。
+1. No ultrasonic/radar sensor; visual mode has **no independent obstacle avoidance**. Test only on flat, enclosed surfaces.
+2. The 60° search segments are timed, not closed-loop; floor friction changes the actual angle.
+3. Color thresholds depend on lighting; recalibrate at each venue.
+4. RGB565 capture plus circle detection limits frame rate; small/distant balls are harder to detect.
+5. The app has no reconnect/heartbeat; gear and step parameters are hard-coded.
+6. Printed-part assembly errors can cause collisions not visible in CAD; continue validation with real assembly and long collection runs.
 
-## 路线图
+## Roadmap
 
-- [ ] 补充完整 BOM、配合公差记录和测试矩阵（收集率、耗时、连续运行、能耗、故障）。
-- [ ] 加超声波防撞；用 IMU 做搜索转向闭环。
-- [ ] 视觉升级 YOLO/OpenCV，参数改为可配置项。
-- [ ] App 增加断线重连、心跳保活、可配置指令集，并整理源码。
-- [ ] 补齐前端收球机构局部尺寸、后箱安装孔位、旋转轴与轴承配合公差。
-- [ ] 统一 GitHub / Gitee / AtomGit 三平台发布与 Release 资产。
+- [ ] Complete BOM, tolerance records and a test matrix (collection rate, time, continuous runtime, energy, failures).
+- [ ] Add ultrasonic collision avoidance; close the search-turn loop with the IMU.
+- [ ] Upgrade vision to YOLO/OpenCV and make parameters configurable.
+- [ ] Add app reconnect/heartbeat/configurable commands and publish the source.
+- [ ] Document front-collector dimensions, bin mounting holes and shaft/bearing tolerances.
+- [ ] Keep GitHub / Gitee / AtomGit releases in sync.
 
-## 开源协议与第三方
+## License and Third-Party Components
 
-- 本项目原创代码、文档和机械 CAD **采用 [MIT License](LICENSE)**。
-- `firmware/Driver/` 下的 CMSIS 与 STM32F4 标准外设库属于 STMicroelectronics，遵循其原有许可，MIT 不覆盖。
-- 轮趣科技 C30D 主控板、R1 底盘，OpenMV 固件/IDE，Android SDK 等第三方组件遵循各自许可。
-- 发布到 GitHub / Gitee / AtomGit 的步骤、体积限制与检查清单见 [`docs/publishing.md`](docs/publishing.md)。
-- 详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+- Original code, documentation and mechanical CAD are released under the [MIT License](LICENSE).
+- CMSIS and the STM32F4 Standard Peripheral Library under `firmware/Driver/` belong to STMicroelectronics and remain under their own license; MIT does not cover them.
+- The WHEELTEC C30D board, R1 chassis, OpenMV firmware/IDE, Android SDK and other third-party components remain under their respective licenses.
+- See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for details.
 
-## 贡献
+## Contributing
 
-欢迎 Issue / PR：修 bug、补文档、改参数、加测试都行。涉及视觉/控制参数的改动，请附上场地、光照、球数等测试条件，避免“只在一台车上偶然有效”的参数进入默认值。
+Issues and pull requests are welcome: bug fixes, documentation, parameter tuning and tests. For changes to vision/control parameters, include the venue, lighting, ball count and other test conditions so that a parameter set is not accepted just because it worked once on one car.
 
-如果这个项目对你有帮助，欢迎 Star；用于课程设计、答辩或公开发布时请注明项目名称与仓库地址。
+If this project helps you, please Star the repository. When using it in coursework, presentations or public write-ups, please cite the project name and repository URL.
 
-## 致谢
+## Acknowledgements
 
-感谢轮趣科技提供的底盘与 C30D 平台资料、OpenMV 的开源生态，以及参与装配、调试和实车测试的全体队员。
+Thanks to WHEELTEC for the chassis and C30D platform documentation, the OpenMV open-source ecosystem, and all team members who contributed to assembly, debugging and field testing.

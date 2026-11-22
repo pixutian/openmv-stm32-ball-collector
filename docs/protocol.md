@@ -1,5 +1,7 @@
 # 通信协议：OpenMV → C30D
 
+[English](en/protocol.md) | **简体中文**
+
 ## 1. 帧格式
 
 ```

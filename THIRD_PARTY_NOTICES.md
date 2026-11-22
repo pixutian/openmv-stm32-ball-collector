@@ -1,32 +1,34 @@
-# 第三方组件与许可说明
+# Third-Party Components and Licenses
 
-本项目包含或使用以下第三方组件，版权与许可归各自权利人所有。根目录 [LICENSE](LICENSE) 的 MIT 许可只覆盖项目团队原创部分。
+[简体中文](THIRD_PARTY_NOTICES.zh-CN.md) | **English**
 
-## 1. STM32F4 标准外设库 / CMSIS
+This project includes or uses the following third-party components. Copyright and licenses remain with their respective owners. The MIT license in [LICENSE](LICENSE) covers only original project work.
 
-位置：
+## 1. STM32F4 Standard Peripheral Library / CMSIS
+
+Location:
 
 ```text
 firmware/Driver/CMSIS/
 firmware/Driver/StdPeriph/
 ```
 
-这些文件来自 STMicroelectronics 的 STM32F4 Standard Peripheral Library 与 ARM CMSIS，遵循其原有许可条款。它们不属于本项目原创代码，MIT 许可不覆盖这些文件。
+These files come from STMicroelectronics' STM32F4 Standard Peripheral Library and ARM CMSIS and remain under their original license terms. They are not original project code and are not covered by the MIT license.
 
-## 2. 轮趣科技（WHEELTEC）硬件
+## 2. WHEELTEC Hardware
 
-项目使用轮趣 R1 四轮差速底盘、C30D 主控板和配套电机。底盘、主控板及其 BSP、示例工程、三维模型的权利归轮趣科技所有，相关硬件与资料遵循厂家许可，本项目不转授权。
+The project uses a WHEELTEC R1 four-wheel differential chassis, a C30D controller and matching motors. Rights to the chassis, controller, BSP, examples and 3D models belong to WHEELTEC; they are used under the vendor's terms and are not relicensed by this project.
 
 ## 3. OpenMV / MicroPython
 
-`openmv/` 下是运行在 OpenMV H7 上的 MicroPython 脚本；OpenMV 固件与 IDE 遵循其各自许可。
+`openmv/` contains MicroPython scripts that run on the OpenMV H7; OpenMV firmware and the IDE remain under their own licenses.
 
 ## 4. Android
 
-`app/` 下提供编译后的 APK，使用 Android SDK 构建。Android 相关组件遵循其原有许可。
+`app/` contains an APK built with the Android SDK. Android components remain under their original licenses.
 
-## 5. 机械模型与图片
+## 5. Mechanical Models and Images
 
-- `hardware/mechanical/` 下的自研零件、工程图、装配参考图和 `media/tech/` 下的 CAD 截图、样机照片由项目团队制作，随本项目按 MIT 许可发布。
-- 实拍照片中出现的第三方产品、场地和人物，其权利归各自权利人所有，仅用于项目说明。
-- 采购件（轮趣底盘、C30D、电机等）的照片和图纸权利归厂家所有，仅用于项目说明。
+- Original parts, drawings, assembly references and CAD/field photos under `hardware/mechanical/` and `media/tech/` were created by the project team and are released under the MIT license.
+- Third-party products, venues and people appearing in field photos remain the rights of their respective owners and are used for project documentation only.
+- Photos and drawings of purchased parts (WHEELTEC chassis, C30D, motors) remain the rights of the vendor and are used for project documentation only.

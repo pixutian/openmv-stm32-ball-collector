@@ -1,5 +1,7 @@
 # 接线：C30D ↔ OpenMV H7
 
+[English](en/wiring.md) | **简体中文**
+
 ## 四线连接（UART4 ↔ UART3）
 
 | C30D H2 | OpenMV H7 | 方向 / 作用 |
