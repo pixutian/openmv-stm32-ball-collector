@@ -117,7 +117,7 @@ App 以 APK 形式提供；包名 `com.pxt.carcontrol`，versionName `3.3`，ver
 ├── hardware/mechanical/   机械 CAD、STL 打印件、工程图与装配参考图
 ├── app/                   Android 控制台 V3.3（APK）
 ├── tools/                 PC 端协议模拟与调试脚本
-├── docs/                  协议、控制、接线、标定、发布说明
+├── docs/                  协议、控制、接线、标定
 ├── media/                 接线图、CAD 截图、实拍照片
 ├── releases/              预编译固件（hex，仅供参考）
 ├── LICENSE                MIT
@@ -132,7 +132,6 @@ App 以 APK 形式提供；包名 `com.pxt.carcontrol`，versionName `3.3`，ver
 | [`docs/protocol.md`](docs/protocol.md) | 视觉链路帧格式、TYPE 定义、CRC 与示例 |
 | [`docs/control.md`](docs/control.md) | 双模式切换、视觉伺服控制量、蓝牙指令 |
 | [`docs/calibration.md`](docs/calibration.md) | 相机安装、像素/距离标定、阈值调试 |
-| [`docs/publishing.md`](docs/publishing.md) | GitHub / Gitee / AtomGit 发布与仓库设置 |
 | [`hardware/mechanical/README.zh-CN.md`](hardware/mechanical/README.zh-CN.md) | 3D 零件清单、材料、紧固件与装配要点 |
 | [`hardware/mechanical/previews/README.zh-CN.md`](hardware/mechanical/previews/README.zh-CN.md) | 整车多视角装配图与 10 个主要零件预览 |
 
@@ -299,7 +298,6 @@ AA 55 | TYPE | LEN | PAYLOAD ... | CRC8
 - 本项目原创代码、文档和机械 CAD **采用 [MIT License](LICENSE)**。
 - `firmware/Driver/` 下的 CMSIS 与 STM32F4 标准外设库属于 STMicroelectronics，遵循其原有许可，MIT 不覆盖。
 - 轮趣科技 C30D 主控板、R1 底盘，OpenMV 固件/IDE，Android SDK 等第三方组件遵循各自许可。
-- 发布到 GitHub / Gitee / AtomGit 的步骤、体积限制与检查清单见 [`docs/publishing.md`](docs/publishing.md)。
 - 详见 [THIRD_PARTY_NOTICES.zh-CN.md](THIRD_PARTY_NOTICES.zh-CN.md)。
 
 ## 贡献

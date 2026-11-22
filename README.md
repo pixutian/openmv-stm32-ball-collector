@@ -117,7 +117,7 @@ The app is distributed as an APK. Package name `com.pxt.carcontrol`, versionName
 ├── hardware/mechanical/   Mechanical CAD, STL, drawings and assembly photos
 ├── app/                   Android console V3.3 (APK)
 ├── tools/                 PC-side protocol simulator and debugging tools
-├── docs/                  Protocol, control, wiring, calibration, publishing
+├── docs/                  Protocol, control, wiring, calibration
 ├── media/                 Wiring diagrams, CAD screenshots, field photos
 ├── releases/              Prebuilt firmware (hex, for reference only)
 ├── LICENSE                MIT
@@ -132,7 +132,6 @@ The app is distributed as an APK. Package name `com.pxt.carcontrol`, versionName
 | [`docs/en/protocol.md`](docs/en/protocol.md) | Vision frame format, TYPE definitions, CRC and examples |
 | [`docs/en/control.md`](docs/en/control.md) | Mode switching, visual servo control, Bluetooth commands |
 | [`docs/en/calibration.md`](docs/en/calibration.md) | Camera mounting, pixel/distance calibration, threshold tuning |
-| [`docs/en/publishing.md`](docs/en/publishing.md) | Publishing to GitHub / Gitee / AtomGit |
 | [`hardware/mechanical/README.md`](hardware/mechanical/README.md) | Part list, materials, fasteners and assembly notes |
 | [`hardware/mechanical/previews/README.md`](hardware/mechanical/previews/README.md) | Multi-view assembly references and part previews |
 
