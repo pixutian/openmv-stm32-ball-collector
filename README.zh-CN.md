@@ -8,7 +8,10 @@
 
 一个开源的双模式乒乓球收集车：日常用蓝牙遥控，切到视觉模式后由 OpenMV 做视觉伺服，自动找球、对中、接近并收球。仓库包含固件、视觉脚本、Android APK、协议调试工具、机械 CAD/STL 模型和技术文档。
 
-![整车侧视](hardware/mechanical/previews/assembly-side2.jpg)
+<p align="center">
+<img src="hardware/mechanical/previews/assembly-front-quarter.jpg" width="48%" alt="整车前视（右前三视角）">
+<img src="hardware/mechanical/previews/assembly-side2.jpg" width="48%" alt="整车侧视">
+</p>
 
 ## 项目简介
 

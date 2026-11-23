@@ -16,6 +16,10 @@ This directory collects full-car assembly photos and CAD previews of the main cu
 |---|---|
 | ![Top](assembly-top.jpg) | ![Isometric](isometirc-view.png) |
 
+![Full car, front three-quarter view](assembly-front-quarter.jpg)
+
+*Front three-quarter view: relative position of the front collector, the OpenMV mast and the rear storage bin.*
+
 - Front: left/right guide claws, three-blade collector, OpenMV mount on top, rear storage bin.
 - Side: relative position of the purchased four-wheel chassis and the custom upper collector; check bin height and the transition to the front channel.
 - Top/isometric: check overall envelope and the bin-to-chassis relationship.

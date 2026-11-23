@@ -8,7 +8,10 @@
 
 An open-source dual-mode ping-pong ball collector: Bluetooth remote control for daily use, and an OpenMV-based visual servo mode that finds, centers on, approaches and collects balls automatically. The repository includes firmware, vision scripts, an Android APK, protocol tools, mechanical CAD/STL files and technical documentation.
 
-![Full car, side view](hardware/mechanical/previews/assembly-side2.jpg)
+<p align="center">
+<img src="hardware/mechanical/previews/assembly-front-quarter.jpg" width="48%" alt="Full car, front three-quarter view">
+<img src="hardware/mechanical/previews/assembly-side2.jpg" width="48%" alt="Full car, side view">
+</p>
 
 ## Overview
 
