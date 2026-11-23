@@ -69,9 +69,9 @@ The layers meet at explicit interfaces: the mechanical layer defines mounting ho
 
 > The C30D and WHEELTEC R1 chassis are purchased parts. Their BSP and vendor documentation remain under the vendor's terms; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-![Module wiring](media/tech/wiring-module.png)
+![Module wiring](media/tech/wiring-diagram.png)
 
-The diagram above shows module-level wiring for the C30D, OpenMV, TB6612 and DCDC converter. For the four-wire OpenMV connection, voltage levels and power-up order, see [`docs/en/wiring.md`](docs/en/wiring.md).
+The diagram above shows the wiring between C30D, OpenMV, TB6612 and the 12 V→5 V DCDC converter: OpenMV and C30D are cross-connected over UART (TX↔RX) with a shared ground; C30D pin PC6 drives the blade PWM input of TB6612, which powers the 5 V blade motor M1; the 12 V battery is stepped down to 5 V by the DCDC module to feed the driver and blade motor. For the full pin table, voltage levels and power-up order, see [`docs/en/wiring.md`](docs/en/wiring.md).
 
 Three wiring rules:
 

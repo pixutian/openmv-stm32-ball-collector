@@ -69,9 +69,9 @@
 
 > C30D 与轮趣 R1 底盘为采购件，其 BSP/资料遵循厂家许可，详见 [THIRD_PARTY_NOTICES.zh-CN.md](THIRD_PARTY_NOTICES.zh-CN.md)。
 
-![模块级接线](media/tech/wiring-module.png)
+![模块级接线](media/tech/wiring-diagram.png)
 
-上图为 C30D、OpenMV、TB6612 与 DCDC 的模块级接线；OpenMV 四线连接、电平和上电顺序见 [`docs/wiring.md`](docs/wiring.md)。
+上图为 C30D、OpenMV、TB6612 与 12 V→5 V DCDC 的接线：OpenMV 与 C30D 的 UART 交叉连接（TX↔RX）并共地；C30D 的 PC6 输出叶片 PWM 给 TB6612，TB6612 驱动 5 V 叶片电机 M1；12 V 电池经 DCDC 降压为 5 V，供驱动模块与叶片电机。完整针脚表、电平与上电顺序见 [`docs/wiring.md`](docs/wiring.md)。
 
 接线时注意三点：
 
