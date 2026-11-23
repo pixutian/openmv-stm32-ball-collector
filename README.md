@@ -213,7 +213,7 @@ M3 hardware, assembly quantities: M3×8 × 4, M3×9 × 8, M3×10 × 6, M3×25 ×
 - STL files are exported in millimetres; check the bounding box and orientation in the slicer before printing.
 - Printed parts can warp. During assembly, check rotor shaft alignment, bracket hole positions, blade clearance, and the transition from the front channel to the rear bin inlet.
 - Recheck the free-end bearing, bearing cover and roller coupling for concentricity and rotation resistance.
-- A bent wire can be added to each guide claw as a stop to reduce ball jams (see section 9.1 of the technical report).
+- A bent wire can be added to each guide claw as a stop to reduce ball jams.
 
 ## Visual Servo Auto-Collection
 

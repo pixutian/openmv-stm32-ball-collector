@@ -198,7 +198,7 @@ hardware/mechanical/
 | 7 | 前挡顶 | [图](hardware/mechanical/previews/06-front-top-baffle.png) | [模型](<hardware/mechanical/solidworks/parts/前挡顶.SLDPRT>) | [STL](<hardware/mechanical/stl/前挡顶.STL>) | 3D 打印（材料待补） | 1 | 前端横向连接/定位 |
 | 8 | 单支架 | [图](hardware/mechanical/previews/07-single-bracket.png) | [模型](<hardware/mechanical/solidworks/parts/单支架.SLDPRT>) | [STL](<hardware/mechanical/stl/单支架.STL>) | PA12 | 2 | 抬高后箱、调整高度 |
 | 9 | 双支架 | [图](hardware/mechanical/previews/08-double-bracket.png) | [模型](<hardware/mechanical/solidworks/parts/双支架.SLDPRT>) | [STL](<hardware/mechanical/stl/双支架.STL>) | PA12 | 1 组 | 双侧连接支撑 |
-| 10 | 拱顶（强化） | [图](hardware/mechanical/previews/09-arch-top.png) | [模型](<hardware/mechanical/solidworks/parts/拱顶（强化）.SLDPRT>) | [STL](<hardware/mechanical/stl/拱顶%28强化）.STL>) | 9600 树脂 | 2 | 横梁、安装高度可调支架与 DCDC |
+| 10 | 拱顶（强化） | [图](hardware/mechanical/previews/09-arch-top.png) | [模型](<hardware/mechanical/solidworks/parts/拱顶（强化）.SLDPRT>) | [STL](<hardware/mechanical/stl/拱顶(强化）.STL>) | 9600 树脂 | 2 | 横梁、安装高度可调支架与 DCDC |
 | 11 | 车前端 | [图](hardware/mechanical/previews/assembly-front.jpg) | [模型](<hardware/mechanical/solidworks/parts/车前端.SLDPRT>) | [STL](<hardware/mechanical/stl/车前端.STL>) | 3201PA-F | 1 | 前端收集机构主体 |
 | 12 | 轴承 605.ZZ | [图](hardware/mechanical/previews/10-bearing-605zz.png) | — | — | 采购件（内 5 × 外 11 × 高 5） | 1 | 自由端低摩擦支承 |
 
@@ -213,7 +213,7 @@ hardware/mechanical/
 - STL 单位按毫米导出；打印前在切片软件里核对尺寸与摆放方向。
 - 打印件容易变形，装配重点检查：旋转轴同轴度、支架孔位、叶片运动间隙、前端导流路径与后箱入口的衔接。
 - 已装机的自由端轴承、轴承定位盒盖和滚轴交接件要复核同轴度与旋转阻力。
-- 左右导流夹可各加一根弯折铁丝做限位隔挡，减少卡球（见技术文档 9.1 节）。
+- 左右导流夹可各加一根弯折铁丝做限位隔挡，减少卡球。
 
 ## 视觉伺服自动拾取
 
