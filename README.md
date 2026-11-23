@@ -22,6 +22,13 @@ The controller is a **C30D (STM32F407VET6)** board, paired with a four-wheel dif
 - The goal is not a demo-only prototype: mechanical, electrical, firmware and mobile parts are all meant to be reproducible and easy to modify.
 - Visual mode has no independent obstacle avoidance. Test only on flat, enclosed surfaces, and recalibrate parameters for each venue and lighting condition.
 
+The design goals fall into four groups:
+
+- **Function**: drive, steer and collect from a phone; or switch to visual servoing so the car finds, centers on, approaches and collects balls on its own.
+- **Structure**: a chassis that carries the load; a collector that balances inlet width, ball guiding, ground clearance and anti-jam behaviour; a body that is cheap to build, easy to assemble and open to modification.
+- **Control**: four-wheel differential drive, blade start/stop and speed control, Bluetooth commands, OLED status and dual-mode switching.
+- **Validation**: assembly, simulation, firmware debugging and field demos all count; collection rate, runtime, cost and reliability need data collected under consistent conditions.
+
 ## Features
 
 - **Dual mode**: Bluetooth remote control / visual servo auto-collection. Remote mode is the power-on default; switch with the C30D USER button or the Android app.
@@ -66,6 +73,12 @@ The layers meet at explicit interfaces: the mechanical layer defines mounting ho
 
 The diagram above shows module-level wiring for the C30D, OpenMV, TB6612 and DCDC converter. For the four-wire OpenMV connection, voltage levels and power-up order, see [`docs/en/wiring.md`](docs/en/wiring.md).
 
+Three wiring rules:
+
+1. GND must be shared — connecting only TX/RX causes intermittent failures.
+2. Route the signal harness away from motor PWM and blade-motor lines; add a ferrite bead if needed.
+3. Do not power OpenMV from the C30D 5V rail while the USB cable is also plugged in; during debugging, USB alone is enough.
+
 ## Quick Start
 
 ### 1. Build and flash the firmware
@@ -103,6 +116,8 @@ For calibration and debugging details, see [`docs/en/calibration.md`](docs/en/ca
 </p>
 
 The app is distributed as an APK. Package name `com.pxt.carcontrol`, versionName `3.3`, versionCode `6`.
+
+The UI does not use XML layouts: `MainActivity` builds the main screen in `onCreate` through the `Ui` class, and the joystick and gear bar are custom `JoystickPad` / `GearBar` views drawn with Canvas, so they scale to different screen sizes.
 
 ### 4. Power-up and test order
 
@@ -153,6 +168,10 @@ hardware/mechanical/
 ```
 
 **Collection path**: left/right curved claws guide scattered balls toward the inlet → the three-blade rotor pushes them through the channel → the rear bin stores them. One end of the rotor shaft is driven by the motor; the other end is supported by a bearing, located by the bearing cover. Single/double brackets raise the rear bin, while the front top baffle and reinforced arch top provide cross-bracing and mounting points for the DCDC converter.
+
+Four things to check during assembly: rotor positioning at the front, left/right claw mounting, the transition from the guide channel into the rear bin, and the layout of the control board, motor driver and harness. Printed-part tolerances and real stiffness must be corrected with physical tests — the model alone is not enough.
+
+**Motion simulation**: a SolidWorks motion study checks how the front rotor turns relative to the chassis and how rotor, ball and guide channel relate geometrically. The point is not to claim fluid-dynamics results without supporting data, but to catch obvious interference, confirm the rotor direction helps push balls backwards, and verify that the claw opening and guide ramp form a continuous path. Simulation must be followed by physical testing: printed-part assembly error introduces collisions the model does not show.
 
 ### Assembly References
 
@@ -235,6 +254,26 @@ Key parameters (full list in [`docs/en/calibration.md`](docs/en/calibration.md))
 
 ![Visual mode field test](media/tech/field-vision-1.jpg)
 
+## Firmware Implementation
+
+The Keil project entry point is `App/app_main.c`; the code is split into App and Hardware layers:
+
+| File | Responsibility |
+|---|---|
+| `App/app_link.c` | Bluetooth protocol, parameter frames, command parsing |
+| `App/app_chassis.c` | 7-gear speed mapping, per-wheel targets, incremental PI |
+| `App/app_vision.c` | Vision frame parsing, servo decisions, no-ball search |
+| `Hardware/vision_uart.c` | UART4 frame reception (interrupt + buffer) |
+| `Hardware/motor.c`, `encoder.c` | PWM output, encoder counting |
+| `Hardware/serial.c`, `screen.c`, `imu.c`, `adc.c` | Bluetooth UART, OLED, attitude, battery sampling |
+
+The control tick is a TIM7 interrupt every 5 ms (200 Hz). Each tick first calls `vision_update()` to consume vision frames; Bluetooth direction `chassis_apply_command(g_link_dir)` runs only when vision mode is off; then the servo stays centered and `chassis_control_step()` reads all four encoders, converts to wheel speed, runs the PI loops and writes PWM.
+
+- **Gear mapping**: `s_speed_set = GEAR_BASE_RPM + (gear - GEAR_CENTER) × GEAR_STEP_RPM` — center gear 3 is 400 r/min, range 100–700.
+- **Speed conversion**: 30:1 gearbox, 13-line encoder, 4× decoding → 1560 counts per revolution; at 200 Hz, `n = ΔN / (30×13×4) × 200 × 60`.
+- **Speed loop**: independent incremental PI per wheel, `Δu = Kp·(e_k − e_{k−1}) + Ki·e_k`, with `Kp=5.0`, `Ki=1.6`, internal limit ±16700, finally clamped to the PWM full scale of 16799.
+- **Blade channel**: PC6 → TIM8_CH1, PSC=0, ARR=9999 → about 16.8 kHz; 100% duty maps to a compare value of 10000.
+
 ## Communication Protocol
 
 Vision frames use a fixed-length binary format:
@@ -295,6 +334,8 @@ Cost reduction: choose a lower-cost controller or used chassis where appropriate
 - [ ] Add app reconnect/heartbeat/configurable commands and publish the source.
 - [ ] Document front-collector dimensions, bin mounting holes and shaft/bearing tolerances.
 - [ ] Keep GitHub / Gitee / AtomGit releases in sync.
+
+Iteration order is "reproduce first, optimize second, extend last": fix the critical assembly tolerances and print supports/wall thickness, re-check the concentricity and rotation resistance of the installed bearing, bearing cover and roller coupling; then use parameter logs and a test matrix to tune blade speed, chassis speed and turning strategy.
 
 ## License and Third-Party Components
 
